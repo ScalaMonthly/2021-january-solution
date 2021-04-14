@@ -1,6 +1,6 @@
 package com.scalamonthly
 
-import cats.parse.{Parser, Parser1}
+import cats.parse.{Parser, Parser0}
 import cats.parse.Parser._
 import cats.parse.Rfc5234.{char => _, _}
 import cats.syntax.all._
@@ -56,8 +56,8 @@ object fundamentals {
       * Example output: BinaryList(NonEmptyList.of(Binary.One, Binary.Zero, Binary.Zero, Binary.One))
       */
     val three: Parser[BinaryList] = {
-        val binary = char('0').as(Binary.Zero) orElse1 char('1').as(Binary.One)
-        binary.rep1.map(BinaryList)
+        val binary = char('0').as(Binary.Zero) orElse char('1').as(Binary.One)
+        binary.rep.map(BinaryList)
     }
 
     final case class Name(value: String) extends AnyVal
@@ -71,7 +71,7 @@ object fundamentals {
       */
     val four: Parser[Name] = {
         val allowedChars = List(char('\''), alpha, sp)
-        (alpha ~ oneOf1(allowedChars).rep).string.map(Name)
+        (alpha ~ oneOf(allowedChars).rep).string.map(Name)
     }
 
     final case class Score(left: Int, right: Int)
@@ -83,7 +83,7 @@ object fundamentals {
       * Example output: Score(123, 456)
       */
     val five: Parser[Score] = {
-        val multiDigit = digit.rep1.string.map(_.toInt)
+        val multiDigit = digit.rep.string.map(_.toInt)
         ((multiDigit <* char('-').surroundedBy(sp)) ~ multiDigit).map(Score.tupled)
     }
 
@@ -119,9 +119,9 @@ object fundamentals {
       * Example input: jess.day.one
       * Example output: UserName("jess.day.one")
       */
-    val seven: Parser[UserName] = {
-        val name = alpha.rep1.string
-        ((name.soft ~ char('.')).rep ~ name).string.map(UserName)
+    val seven: Parser0[UserName] = {
+        val name = alpha.rep.string
+        ((name.soft ~ char('.')).rep0 ~ name).string.map(UserName)
     }
 
     /**
@@ -137,7 +137,7 @@ object fundamentals {
       * @return a parser returning a string when the input is valid
       */
     def eight(allowedChars: List[Char]): Parser[String] = {
-        charIn(allowedChars).rep1.string
+        charIn(allowedChars).rep.string
     }
 
     final case class CarType(make: String, model: Option[String])
@@ -151,8 +151,8 @@ object fundamentals {
       * Example output: CarType("Nissan", Some("Versa"))
       */
     val nine: Parser[CarType] = {
-      val make = alpha.rep1.string
-      val model = alpha.rep1.string.?
+      val make = alpha.rep.string
+      val model = alpha.rep.string.?
       ((make <* sp.?) ~ model).map(CarType.tupled)
     }
 

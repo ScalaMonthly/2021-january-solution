@@ -1,6 +1,6 @@
 package com.scalamonthly
 
-import cats.parse.{Parser, Parser1}
+import cats.parse.{Parser, Parser0}
 import cats.parse.Parser._
 import cats.parse.Rfc5234.{char => _, _}
 import cats.syntax.all._
@@ -51,7 +51,7 @@ object challenge {
             oneOf(List(fileAndRankSource.backtrack, fileSource, rankSource))
         }
 
-        val move: Parser[Move] = {
+        val move: Parser0[Move] = {
             import Move._
             val castle: Parser[Castle] = {
                 val kingSide = string("O-O").as(Castle.KingSide)
@@ -64,19 +64,19 @@ object challenge {
             val nonPawnD: Parser[Standard] = (pieceType ~ disambiguator ~ char('x').? ~ square ~ check.?)
                 .map { case ((((pt, d), x), s), c) => Standard(pt, s, Some(d), x.isDefined, c) }
             val promotion: Parser[PieceType] = char('=') *> pieceType
-            val pawn: Parser[Move] = ((file.soft ~ char('x')).? ~ square ~ promotion.? ~ check.?)
+            val pawn: Parser0[Move] = ((file.soft ~ char('x')).? ~ square ~ promotion.? ~ check.?)
                 .map { case (((fx, sq), promo), cs) =>
                     val pMove = PawnMove(fx.map(_._1), sq, fx.isDefined, cs)
                     promo.map(Promotion(pMove, _)).getOrElse(pMove)
                 }
 
-            oneOf(List(castle, nonPawnD.backtrack, nonPawn, pawn))
+            oneOf0(List(castle, nonPawnD.backtrack, nonPawn, pawn))
         }
 
-        val turn: Parser1[Turn] = {
+        val turn: Parser[Turn] = {
             import Turn._
-            val anyWhiteSpace = oneOf1(List(wsp, cr, crlf, lf)).rep
-            val turnNumber = digit.rep1 *> char('.') *> anyWhiteSpace
+            val anyWhiteSpace = oneOf(List(wsp, cr, crlf, lf)).rep
+            val turnNumber = digit.rep *> char('.') *> anyWhiteSpace
             val mv1 = move
             val mv2 = move.surroundedBy(anyWhiteSpace)
             val fullTurn = (mv1 ~ mv2).map(FullTurn.tupled)
@@ -94,7 +94,7 @@ object challenge {
             oneOf(List(draw.backtrack, whiteWins, blackWins, unknown))
         }
 
-        (turn.backtrack.rep1 ~ outcome).map(Game.tupled)
+        (turn.backtrack.rep ~ outcome).map(Game.tupled)
     }
 
 }
