@@ -119,9 +119,9 @@ object fundamentals {
       * Example input: jess.day.one
       * Example output: UserName("jess.day.one")
       */
-    val seven: Parser0[UserName] = {
+    val seven: Parser[UserName] = {
         val name = alpha.rep.string
-        ((name.soft ~ char('.')).rep0 ~ name).string.map(UserName)
+        ((name.soft ~ char('.')).rep0.with1 ~ name).string.map(UserName)
     }
 
     /**
